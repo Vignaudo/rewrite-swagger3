@@ -7,7 +7,6 @@ import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
-import org.vignaudo.rewrite.swagger.SwaggerUpgrade3Recipe;
 
 /**
  * Unit test for simple App.

@@ -1,9 +1,9 @@
 ---
 type: specs.openrewrite.org/v1beta/recipe
-name: org.ubiqube.Sw3ResponseRecipe
+name: org.vignaudo.Sw3ResponseRecipe
 displayName: Swagger 3 migration
 description: description
 recipeList:
-  - org.swagger.Sw3ResponseRecipe
-  - org.swagger.SwaggerModelRecipe
-  - org.swagger.SwaggerUpgrade3Recipe
+  - org.vignaudo.rewrite.swagger.Sw3ResponseRecipe
+  - org.vignaudo.rewrite.swagger.SwaggerModelRecipe
+  - org.vignaudo.rewrite.swagger.SwaggerUpgrade3Recipe

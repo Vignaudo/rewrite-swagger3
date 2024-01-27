@@ -67,6 +67,9 @@ public class SwaggerUpgrade3Recipe extends Recipe {
 	// JAX-rs
 	private static final AnnotationMatcher ANN_JAXRS_PATH_PARAM = new AnnotationMatcher("javax.ws.rs.PathParam");
 	private static final AnnotationMatcher ANN_JAXRS_QUERY_PARAM = new AnnotationMatcher("javax.ws.rs.QueryParam");
+	// Jakarta RS
+	private static final AnnotationMatcher ANN_JAXRS_JAKARTA__PATH_PARAM = new AnnotationMatcher("jakarta.ws.rs.PathParam");
+	private static final AnnotationMatcher ANN_JAXRS_JAKARTA_QUERY_PARAM = new AnnotationMatcher("jakarta.ws.rs.QueryParam");
 
 	@Override
 	public String getDisplayName() {
@@ -83,8 +86,8 @@ public class SwaggerUpgrade3Recipe extends Recipe {
 		return Preconditions.check(Preconditions.or(
 				new UsesType<>("io.swagger.annotations.ApiParam", false),
 				new UsesType<>("io.swagger.annotations.ApiOperation", false),
-				new FindImports("io.swagger.annotations.ApiOperation").getVisitor(),
-				new FindImports("io.swagger.annotations.ApiParam").getVisitor()), new SwaggerVisitor());
+				new FindImports("io.swagger.annotations.ApiOperation", false).getVisitor(),
+				new FindImports("io.swagger.annotations.ApiParam", false).getVisitor()), new SwaggerVisitor());
 	}
 
 	private class SwaggerVisitor extends JavaIsoVisitor<ExecutionContext> {
@@ -150,10 +153,10 @@ public class SwaggerUpgrade3Recipe extends Recipe {
 
 		private Expression findAnnotation(final List<Expression> args, final String element) {
 			return args.stream()
-					.filter(x -> x instanceof J.Assignment)
+					.filter(Assignment.class::isInstance)
 					.map(J.Assignment.class::cast)
 					.filter(x -> isMatching(x.getVariable(), element))
-					.map(x -> x.getAssignment())
+					.map(Assignment::getAssignment)
 					.findFirst().orElse(null);
 		}
 
@@ -293,10 +296,10 @@ public class SwaggerUpgrade3Recipe extends Recipe {
 				return ParameterIn.QUERY;
 			}
 			// Jax-rs
-			if (match(annotations, ANN_JAXRS_PATH_PARAM)) {
+			if (match(annotations, ANN_JAXRS_PATH_PARAM) || match(annotations, ANN_JAXRS_JAKARTA__PATH_PARAM)) {
 				return ParameterIn.PATH;
 			}
-			if (match(annotations, ANN_JAXRS_QUERY_PARAM)) {
+			if (match(annotations, ANN_JAXRS_QUERY_PARAM) || match(annotations, ANN_JAXRS_JAKARTA_QUERY_PARAM)) {
 				return ParameterIn.QUERY;
 			}
 			LOG.warn("Unable to find annotations in {}", annotations);

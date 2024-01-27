@@ -76,7 +76,7 @@ public class Sw3ResponseRecipe extends Recipe {
 	public TreeVisitor<?, ExecutionContext> getVisitor() {
 		return Preconditions.check(Preconditions.or(
 				new UsesType<>("io.swagger.annotations.ApiResponses", false),
-				new FindImports("io.swagger.annotations.ApiResponses").getVisitor()), new ApiResponseVisitor());
+				new FindImports("io.swagger.annotations.ApiResponses", false).getVisitor()), new ApiResponseVisitor());
 	}
 
 	public static class ApiResponseVisitor extends JavaIsoVisitor<ExecutionContext> {
@@ -98,6 +98,7 @@ public class Sw3ResponseRecipe extends Recipe {
 					final Annotation res = convertToTag(annotation);
 					ret.add(res);
 					maybeRemoveImport("io.swagger.annotations.Api");
+					maybeRemoveImport("io.swagger.annotations.Authorization");
 					maybeAddImport(Tag.class.getCanonicalName());
 				} else {
 					ret.add(annotation);
@@ -115,7 +116,7 @@ public class Sw3ResponseRecipe extends Recipe {
 		}
 
 		private static @Nullable List<Expression> filterArguments(@Nullable final List<Expression> arguments) {
-			return arguments.stream().filter(x -> x instanceof J.Assignment)
+			return arguments.stream().filter(Assignment.class::isInstance)
 					.map(J.Assignment.class::cast)
 					.filter(x -> ((J.Identifier) x.getVariable()).getSimpleName().equals("value"))
 					.map(Expression.class::cast)
@@ -147,7 +148,7 @@ public class Sw3ResponseRecipe extends Recipe {
 					final List<Expression> init = na.getInitializer();
 					final List<JRightPadded<Expression>> resp = init.stream()
 							.map(x -> convertApiResponse((Annotation) x, init))
-							.map(x -> packJRight(x))
+							.map(ApiResponseVisitor::packJRight)
 							.toList();
 					final ShallowClass tagTypeResponse = JavaType.ShallowClass.build("io.swagger.v3.oas.annotations.responses.ApiResponses");
 					final JContainer<Expression> jContainer = JContainer.build(Space.EMPTY, resp, Markers.EMPTY);
@@ -170,7 +171,7 @@ public class Sw3ResponseRecipe extends Recipe {
 			final List<Expression> args = ann.getArguments();
 			final List<JRightPadded<Expression>> paddedAargs = args.stream()
 					.map(x -> convertAssigment((Assignment) x, init))
-					.map(x -> packJRight(x))
+					.map(ApiResponseVisitor::packJRight)
 					.toList();
 			@Nullable
 			final JContainer<Expression> jContainer = JContainer.build(Space.EMPTY, paddedAargs, Markers.EMPTY);
@@ -221,29 +222,29 @@ public class Sw3ResponseRecipe extends Recipe {
 
 		private static Optional<J.Assignment> findAttribute(final List<Expression> init, final String string) {
 			return init.stream()
-					.filter(x -> x instanceof J.Assignment)
+					.filter(Assignment.class::isInstance)
 					.map(J.Assignment.class::cast)
 					.filter(x -> ((J.Identifier) x.getVariable()).getSimpleName().equals(string))
 					.findFirst();
 		}
 
 		private static Annotation createAnnotation2(final Class<?> class1, final Map<String, Annotation> of) {
-			final ShallowClass clazz = JavaType.ShallowClass.build(class1.getCanonicalName());
 			final List<JRightPadded<Expression>> paddedAargs = of.entrySet().stream()
 					.map(c -> createAssignment(c.getKey(), c.getValue()))
-					.map(x -> packJRight(x))
+					.map(ApiResponseVisitor::packJRight)
 					.toList();
+			final ShallowClass clazz = JavaType.ShallowClass.build(class1.getCanonicalName());
 			final JContainer<Expression> jContainer = JContainer.build(Space.EMPTY, paddedAargs, Markers.EMPTY);
 			final NameTree annType = new J.Identifier(randomId(), Space.EMPTY, Markers.EMPTY, clazz.getClassName(), clazz, null);
 			return new Annotation(randomId(), Space.EMPTY, Markers.EMPTY, annType, jContainer);
 		}
 
 		private static J.Annotation createAnnotation(final Class<?> class1, final Map<String, Assignment> of) {
-			final ShallowClass clazz = JavaType.ShallowClass.build(class1.getCanonicalName());
 			final List<JRightPadded<Expression>> paddedAargs = of.entrySet().stream()
 					.map(c -> createAssignment(c.getKey(), c.getValue().getAssignment()))
-					.map(x -> packJRight(x))
+					.map(ApiResponseVisitor::packJRight)
 					.toList();
+			final ShallowClass clazz = JavaType.ShallowClass.build(class1.getCanonicalName());
 			final JContainer<Expression> jContainer = JContainer.build(Space.EMPTY, paddedAargs, Markers.EMPTY);
 			final NameTree annType = new J.Identifier(randomId(), Space.EMPTY, Markers.EMPTY, clazz.getClassName(), clazz, null);
 			return new Annotation(randomId(), Space.EMPTY, Markers.EMPTY, annType, jContainer);

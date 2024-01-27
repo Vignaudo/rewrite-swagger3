@@ -19,6 +19,7 @@ package org.vignaudo.rewrite.swagger;
 import static org.openrewrite.Tree.randomId;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
@@ -41,8 +42,11 @@ import org.openrewrite.java.tree.JavaType.ShallowClass;
 import org.openrewrite.java.tree.NameTree;
 import org.openrewrite.java.tree.Space;
 import org.openrewrite.marker.Markers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SwaggerModelRecipe extends Recipe {
+	private static final Logger LOG = LoggerFactory.getLogger(SwaggerModelRecipe.class);
 
 	@Override
 	public String getDisplayName() {
@@ -58,7 +62,7 @@ public class SwaggerModelRecipe extends Recipe {
 	public TreeVisitor<?, ExecutionContext> getVisitor() {
 		return Preconditions.check(Preconditions.or(
 				new UsesType<>("io.swagger.annotations.ApiModel", false),
-				new FindImports("io.swagger.annotations.ApiModel").getVisitor()), new SwaggerModelVisitor());
+				new FindImports("io.swagger.annotations.ApiModel", false).getVisitor()), new SwaggerModelVisitor());
 	}
 
 	private static class SwaggerModelVisitor extends JavaIsoVisitor<ExecutionContext> {
@@ -85,7 +89,7 @@ public class SwaggerModelRecipe extends Recipe {
 			final List<Expression> args = ann.getArguments();
 			final List<JRightPadded<Expression>> paddedAargs = args.stream()
 					.map(x -> convertAssigmentModel((Assignment) x))
-					.map(x -> packJRight(x))
+					.map(SwaggerModelVisitor::packJRight)
 					.toList();
 			@Nullable
 			final JContainer<Expression> jContainer = JContainer.build(Space.EMPTY, paddedAargs, Markers.EMPTY);
@@ -99,10 +103,10 @@ public class SwaggerModelRecipe extends Recipe {
 		private J.Annotation convertApiResponse(final J.Annotation ann) {
 			@Nullable
 			final List<Expression> args = ann.getArguments();
-			final List<JRightPadded<Expression>> paddedAargs = args.stream()
-					.map(x -> convertAssigment((Assignment) x))
-					.map(x -> packJRight(x))
-					.toList();
+			final List<JRightPadded<Expression>> paddedAargs = Optional.ofNullable(args).map(x -> x.stream()
+					.map(y -> convertAssigment((Assignment) y))
+					.map(SwaggerModelVisitor::packJRight)
+					.toList()).orElseGet(List::of);
 			@Nullable
 			final JContainer<Expression> jContainer = JContainer.build(Space.SINGLE_SPACE, paddedAargs, Markers.EMPTY);
 			final ShallowClass tagType = JavaType.ShallowClass.build("io.swagger.v3.oas.annotations.media.Schema");
@@ -142,6 +146,9 @@ public class SwaggerModelRecipe extends Recipe {
 			if ("allowableValues".equals(name)) {
 				// TODO : Moved to @Schema
 				return null;
+			}
+			if ("hidden".equals(name)) {
+				return sameConvertion("hidden", x);
 			}
 			throw new IllegalArgumentException("Unknown assignment " + name);
 		}
