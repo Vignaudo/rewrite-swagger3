@@ -23,7 +23,6 @@ import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
-import org.vignaudo.rewrite.swagger.SwaggerModelRecipe;
 
 class SwaggerModelRecipeTest implements RewriteTest {
 

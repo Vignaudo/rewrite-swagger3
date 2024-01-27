@@ -23,7 +23,6 @@ import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
-import org.vignaudo.rewrite.swagger.Sw3ResponseRecipe;
 
 class ApiResponseTest implements RewriteTest {
 	@Override
@@ -60,8 +59,13 @@ class ApiResponseTest implements RewriteTest {
 								package com.yourorg;
 								import java.util.Map;
 								import io.swagger.annotations.ApiParam;
+								import io.swagger.v3.oas.annotations.media.Content;
+								import io.swagger.v3.oas.annotations.media.Schema;
 								import io.swagger.v3.oas.annotations.responses.ApiResponse;
 								import io.swagger.v3.oas.annotations.responses.ApiResponses;
+								import io.swagger.v3.oas.annotations.tags.Tag;
+
+								@Tag(name= "pm_jobs",description= "pm_jobs")
 								public interface NsDescriptors281Sol005Api {
 									@ApiResponses(value = {
 										@ApiResponse(code = "200", description = "200 OK Shall be returned when information about zero or more alarms has been queried successfully. The response body shall contain in an array the representations of zero or more alarms as defined in clause 7.5.2.4. If the \\"filter\\" URI parameter was supplied in the request, the data in the response body shall have been transformed according to the rules specified in clause 5.2.2 of ETSI GS NFV-SOL 013. If the VNFM supports alternative 2 (paging) according to clause 5.4.2.1 of ETSI GS NFV-SOL 013 for this resource, inclusion of the Link HTTP header in this response shall follow the provisions in clause 5.4.2.3 of ETSI GS NFV-SOL 013. ", schema=@Schema(implementation= Void.class)),

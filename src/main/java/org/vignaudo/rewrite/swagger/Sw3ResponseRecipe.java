@@ -19,6 +19,7 @@ package org.vignaudo.rewrite.swagger;
 import static org.openrewrite.Tree.randomId;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -108,17 +109,22 @@ public class Sw3ResponseRecipe extends Recipe {
 		}
 
 		private static Annotation convertToTag(final Annotation annotation) {
-			final List<Expression> args = filterArguments(annotation.getArguments());
+			final List<Expression> args = filterArguments(annotation.getArguments(), "value");
 			if (args.isEmpty()) {
 				return null;
 			}
-			return createAnnotation(Tag.class, Map.of("name", (J.Assignment) args.get(0)));
+			final Map<String, J.Assignment> map = new LinkedHashMap<>();
+			map.put("name", (J.Assignment) args.get(0));
+			Optional.ofNullable(filterArguments(annotation.getArguments(), "description"))
+					.filter(x -> !x.isEmpty())
+					.ifPresent(x -> map.put("description", (J.Assignment) args.get(0)));
+			return createAnnotation(Tag.class, map);
 		}
 
-		private static @Nullable List<Expression> filterArguments(@Nullable final List<Expression> arguments) {
+		private static @Nullable List<Expression> filterArguments(@Nullable final List<Expression> arguments, final String element) {
 			return arguments.stream().filter(Assignment.class::isInstance)
 					.map(J.Assignment.class::cast)
-					.filter(x -> ((J.Identifier) x.getVariable()).getSimpleName().equals("value"))
+					.filter(x -> ((J.Identifier) x.getVariable()).getSimpleName().equals(element))
 					.map(Expression.class::cast)
 					.toList();
 		}
